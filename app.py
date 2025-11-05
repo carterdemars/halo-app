@@ -1,7 +1,8 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.express as px
-from datetime import datetime
 from typing import Optional, Tuple
+import html
 import io
 
 import pandas as pd
@@ -39,16 +40,23 @@ def set_page_style():
 			z-index: 0;
 		}
 
-		/* Login card styling only */
-		.login-card {
-			background: rgba(255,255,255,0.06);
-			backdrop-filter: blur(6px);
-			padding: 1.1rem;
-			border-radius: 12px;
-			box-shadow: 0 10px 30px rgba(2,10,30,0.35);
-			border: 1px solid rgba(255,255,255,0.04);
-			z-index: 1;
-			margin: 14px 0 18px 0;
+		/* Login card styling */
+		div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column;"] > div[data-testid="stVerticalBlock"] {
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 16px;
+			padding: 2rem 2.4rem;
+			background: rgba(255,255,255,0.07);
+			backdrop-filter: blur(12px);
+			box-shadow: 0 16px 40px rgba(2,10,30,0.35);
+		}
+		.st-emotion-cache-uf99v8 {
+			background: transparent !important;
+		}
+		.login-card .centered-title {
+			margin: 0 0 1.2rem 0;
+		}
+		.login-card .centered-title h1 {
+			font-size: 2rem;
 		}
 
 		/* Dashboard sections */
@@ -58,28 +66,50 @@ def set_page_style():
 			margin: 6px 0 10px 0;
 		}
 
-		/* Center login card */
-		.login-box { max-width:520px; margin:auto; }
 		.small-muted { color: rgba(230,242,255,0.8); font-size:12px; }
+
+		/* Centered title block for login and dashboard hero area */
+		.centered-title {
+			text-align: center;
+			margin: 0.5rem auto 1.6rem auto;
+		}
+		.centered-title h1 {
+			margin: 0;
+			font-size: 2.4rem;
+			font-weight: 700;
+			letter-spacing: 0.01em;
+			color: #e6f2ff;
+		}
+		.centered-title p {
+			margin: 0.35rem 0 0 0;
+			color: rgba(230,242,255,0.85);
+			font-size: 1rem;
+		}
 
 		/* Headings & text colors */
 		h1, h2, h3, .stHeader, .css-1d391kg { color: #e6f2ff; }
 		.stMarkdown p, .stText { color: rgba(230,242,255,0.9); }
+		/* Hide Streamlit anchor links on headings */
+		.stMarkdown h1 a,
+		.stMarkdown h2 a,
+		.stMarkdown h3 a {
+			display: none !important;
+		}
 
 		/* Make Plotly backgrounds match card */
 		.css-1d391kg .element-container, .stPlotlyChart > div {
 			background: transparent !important;
 		}
 
-		/* Make default buttons white with dark text for readability on blue theme */
-		.stButton > button, .stDownloadButton > button {
+		/* Login card primary action */
+		.login-card button {
 			background: #ffffff !important;
 			color: #0f1724 !important;
 			border: 1px solid rgba(2,16,36,0.15) !important;
 			border-radius: 10px !important;
 			box-shadow: 0 6px 14px rgba(2,10,30,0.2) !important;
 		}
-		.stButton > button:hover, .stDownloadButton > button:hover {
+		.login-card button:hover {
 			background: #f2f6fb !important;
 		}
 
@@ -113,6 +143,54 @@ def set_page_style():
 			transform: translateY(-1px);
 			box-shadow: 0 6px 18px rgba(2,10,30,0.32) !important;
 			background: rgba(255,255,255,0.1) !important;
+		}
+
+		/* Time window buttons styling - Direct CSS targeting */
+		/* Target all buttons in the time window section */
+		[data-testid="stButton"] button,
+		[data-testid="stButton"] button[data-testid="baseButton-secondary"] {
+			background: rgba(255,255,255,0.08) !important;
+			color: rgba(230,242,255,0.82) !important;
+			border: 1px solid rgba(255,255,255,0.15) !important;
+			border-radius: 12px !important;
+			box-shadow: none !important;
+			font-weight: 600 !important;
+			font-size: 0.95rem !important;
+			padding: 0.55rem 1.2rem !important;
+			transition: all 0.2s ease !important;
+		}
+		[data-testid="stButton"] button:hover {
+			border-color: rgba(255,255,255,0.45) !important;
+			transform: translateY(-1px) !important;
+			box-shadow: 0 6px 18px rgba(2,10,30,0.32) !important;
+			background: rgba(255,255,255,0.12) !important;
+		}
+		/* Primary (selected) button styling */
+		[data-testid="stButton"] button[data-testid="baseButton-primary"],
+		[data-testid="stButton"] button[kind="primary"] {
+			background: #1e7fd9 !important;
+			border-color: #1565a0 !important;
+			color: #ffffff !important;
+			box-shadow: 0 8px 24px rgba(30, 127, 217, 0.35) !important;
+		}
+
+		/* Download button styling */
+		[data-testid="stDownloadButton"] button {
+			background: rgba(255,255,255,0.08) !important;
+			color: rgba(230,242,255,0.82) !important;
+			border: 1px solid rgba(255,255,255,0.15) !important;
+			border-radius: 12px !important;
+			box-shadow: none !important;
+			font-weight: 600 !important;
+			font-size: 0.95rem !important;
+			padding: 0.55rem 1.2rem !important;
+			transition: all 0.2s ease !important;
+		}
+		[data-testid="stDownloadButton"] button:hover {
+			border-color: rgba(255,255,255,0.45) !important;
+			transform: translateY(-1px) !important;
+			box-shadow: 0 6px 18px rgba(2,10,30,0.32) !important;
+			background: rgba(255,255,255,0.12) !important;
 		}
 
 
@@ -169,50 +247,12 @@ def set_page_style():
 		.stDeployButton, div[data-testid="stStatusWidget"] { display: none !important; }
 		footer { visibility: hidden; height: 0; }
 
-		/* Time window buttons styling - FINAL (marker-based to survive Streamlit layout) */
-		/* Base (unselected) style for time-window buttons. Use general sibling to survive Streamlit wrappers */
-		.tw-marker ~ div.stButton > button,
-		.tw-marker ~ div .stButton > button {
-			background: rgba(255,255,255,0.08) !important;
-			color: rgba(230,242,255,0.82) !important;
-			border: 1px solid rgba(255,255,255,0.15) !important;
-			border-radius: 12px !important;
-			box-shadow: none !important;
-			font-weight: 600 !important;
-			font-size: 0.95rem !important;
-			padding: 0.55rem 1.2rem !important;
-			transition: all 0.2s ease !important;
-			width: 100% !important; /* Make button fill its column */
-		}
-		.tw-marker ~ div.stButton > button:hover,
-		.tw-marker ~ div .stButton > button:hover {
-			border-color: rgba(255,255,255,0.45) !important;
-			transform: translateY(-1px) !important;
-			box-shadow: 0 6px 18px rgba(2,10,30,0.32) !important;
-			background: rgba(255,255,255,0.12) !important;
-		}
-		.tw-marker ~ div.stButton > button:focus,
-		.tw-marker ~ div .stButton > button:focus,
-		.tw-marker ~ div.stButton > button:active,
-		.tw-marker ~ div .stButton > button:active {
-			background: #1e7fd9 !important;
-			border-color: #1565a0 !important;
-			color: #ffffff !important;
-			box-shadow: 0 8px 24px rgba(30, 127, 217, 0.35) !important;
-		}
-
-		/* Persistently selected state based on marker class */
-		.tw-marker.selected ~ div.stButton > button,
-		.tw-marker.selected ~ div .stButton > button {
-			background: #1e7fd9 !important;
-			border-color: #1565a0 !important;
-			color: #ffffff !important;
-			box-shadow: 0 8px 24px rgba(30, 127, 217, 0.35) !important;
-		}
 		</style>
 		""",
 		unsafe_allow_html=True,
 	)
+
+
 def plot_time_series(df: pd.DataFrame, x_col: str, y_col: str, title: str, y_range: Optional[Tuple[float, float]] = None):
 	fig = px.line(df, x=x_col, y=y_col)
 	fig.update_traces(line=dict(color='white', width=2))
@@ -235,120 +275,141 @@ def plot_time_series(df: pd.DataFrame, x_col: str, y_col: str, title: str, y_ran
 	return fig
 
 
-def login_page():
-	st.markdown('<div class="login-box login-card">', unsafe_allow_html=True)
-	st.header('HALO — Veterinary Monitoring')
-	st.write('Please sign in to access the dashboard.')
-	st.markdown('### Credentials')
-	st.info('Default username: `admin`  — default password: `admin`')
-	with st.form('login_form'):
-		username = st.text_input('Username', value='admin')
-		password = st.text_input('Password', type='password', value='admin')
-		submitted = st.form_submit_button('Sign in')
-		if submitted:
-			if username.strip() == 'admin' and password == 'admin':
-				
-				st.session_state.logged_in = True
-				st.session_state.user = username.strip()
-				
-				try:
-					st.rerun()
-				except Exception:
-					pass
-				return
-			else:
-				st.error('Invalid username or password')
-
-
-def dashboard():
-	st.title('HALO — Veterinary Dashboard')
-	st.markdown('Monitoring canine vitals across temperature, pulse, and respiration.')
-
-	# Determine window selection from session state
-	hours_map = {'1h': 1, '6h': 6, '24h': 24, '7d': 168}
-	if 'hours' not in st.session_state or st.session_state['hours'] not in hours_map.values():
-		st.session_state['hours'] = 24
-	hours = st.session_state['hours']
-
-	# Data for current selection
-	df = simulator.simulate_vitals(hours)
-	latest = df.iloc[-1]
-
-	# Present vitals in summary cards
-	temp_val = f"{latest.temperature_C:.1f}"
-	pulse_val = f"{latest.pulse_bpm}"
-	resp_val = f"{latest.respiration_bpm:.1f}"
+def render_centered_title(title: str, subtitle: Optional[str] = None):
+	title_html = html.escape(title)
+	subtitle_html = f"<p>{html.escape(subtitle)}</p>" if subtitle else ""
 	st.markdown(
 		f"""
-		<div class="dashboard-section">
-			<div class="vital-summary">
-				<div class="vital-card">
-					<span class="label">Temperature</span>
-					<span class="value">{temp_val}</span>
-					<span class="unit">°C</span>
-				</div>
-				<div class="vital-card">
-					<span class="label">Pulse</span>
-					<span class="value">{pulse_val}</span>
-					<span class="unit">bpm</span>
-				</div>
-				<div class="vital-card">
-					<span class="label">Respiration</span>
-					<span class="value">{resp_val}</span>
-					<span class="unit">bpm</span>
-				</div>
-			</div>
+		<div class="centered-title">
+			<h1>{title_html}</h1>
+			{subtitle_html}
 		</div>
 		""",
 		unsafe_allow_html=True,
 	)
 
-	# Charts
-	st.markdown('<div class="dashboard-section">', unsafe_allow_html=True)
-	c1, c2, c3 = st.columns(3)
-	with c1:
-		fig_t = plot_time_series(df, 'timestamp', 'temperature_C', 'Temperature (°C)', y_range=(36.5, 41))
-		st.plotly_chart(fig_t, use_container_width=True)
-	with c2:
-		fig_p = plot_time_series(df, 'timestamp', 'pulse_bpm', 'Pulse (BPM)', y_range=(40, 200))
-		st.plotly_chart(fig_p, use_container_width=True)
-	with c3:
-		fig_r = plot_time_series(df, 'timestamp', 'respiration_bpm', 'Respiration (bpm)', y_range=(6, 80))
-		st.plotly_chart(fig_r, use_container_width=True)
-	st.markdown('</div>', unsafe_allow_html=True)
 
-	# History window control below charts
-	st.markdown('<div class="dashboard-section">', unsafe_allow_html=True)
-	_, c1, c2, c3, c4, _ = st.columns([1.5, 1, 1, 1, 1, 1.5])
+def login_page():
+	_, col, _ = st.columns([1, 1.5, 1])
+	with col:
+		with st.container(border=True):
+			render_centered_title('HALO - Veterinary Dashboard', 'Please sign in to access the dashboard.')
+			with st.form('login_form'):
+				username = st.text_input('Username', value='admin', key='login_username')
+				password = st.text_input('Password', type='password', value='admin', key='login_password')
+				submitted = st.form_submit_button('Sign in', width='stretch')
+				if submitted:
+					if username.strip() == 'admin' and password == 'admin':
+						st.session_state.logged_in = True
+						st.session_state.user = username.strip()
+						st.rerun()
+					else:
+						st.error('Invalid username or password')
 
+
+def dashboard():
+	render_centered_title('HALO - Veterinary Dashboard', 'Monitoring canine vitals across temperature, pulse, and respiration.')
+
+	# --- Time Window Setup ---
+	time_options = [
+		('1h', 1),
+		('6h', 6),
+		('24h', 24),
+		('7d', 168),
+	]
+	if 'hours' not in st.session_state:
+		st.session_state['hours'] = 24 # Default to 24h
+	hours = st.session_state['hours']
+
+	# --- Data Loading and Filtering ---
+	# Run refresh logic first if the button was clicked
+	refresh_col, download_col = st.columns([1,1]) # Placeholders for layout
+	if 'full_data' not in st.session_state:
+		st.session_state['full_data'] = simulator.simulate_vitals(168)
+
+	# Filter data based on the selected time window
+	full_df = st.session_state['full_data'].sort_values('timestamp')
+	latest = full_df.iloc[-1]
+	cutoff = latest['timestamp'] - pd.Timedelta(hours=hours)
+	df = full_df[full_df['timestamp'] >= cutoff].copy()
+
+	# --- Vitals and Charts ---
+	stats_container = st.container()
+	charts_container = st.container()
+
+	with stats_container:
+		st.markdown(
+			f"""
+			<div class="dashboard-section">
+				<div class="vital-summary">
+					<div class="vital-card">
+						<span class="label">Temperature</span>
+						<span class="value">{latest.temperature_C:.1f}</span>
+						<span class="unit">°C</span>
+					</div>
+					<div class="vital-card">
+						<span class="label">Pulse</span>
+						<span class="value">{latest.pulse_bpm}</span>
+						<span class="unit">bpm</span>
+					</div>
+					<div class="vital-card">
+						<span class="label">Respiration</span>
+						<span class="value">{latest.respiration_bpm:.1f}</span>
+						<span class="unit">bpm</span>
+					</div>
+				</div>
+			</div>
+			""",
+			unsafe_allow_html=True,
+		)
+
+	with charts_container:
+		st.markdown('<div class="dashboard-section">', unsafe_allow_html=True)
+		c1, c2, c3 = st.columns(3)
+		with c1:
+			fig_t = plot_time_series(df, 'timestamp', 'temperature_C', 'Temperature (°C)', y_range=(36.5, 41))
+			st.plotly_chart(fig_t, key='temp_chart')
+		with c2:
+			fig_p = plot_time_series(df, 'timestamp', 'pulse_bpm', 'Pulse (BPM)', y_range=(40, 200))
+			st.plotly_chart(fig_p, key='pulse_chart')
+		with c3:
+			fig_r = plot_time_series(df, 'timestamp', 'respiration_bpm', 'Respiration (bpm)', y_range=(6, 80))
+			st.plotly_chart(fig_r, key='resp_chart')
+		st.markdown('</div>', unsafe_allow_html=True)
+
+	# --- Time Window Controls ---
 	def set_hours(h):
 		st.session_state['hours'] = h
 
-	with c1:
-		st.markdown(f'<span class="tw-marker {"selected" if hours == 1 else ""}"></span>', unsafe_allow_html=True)
-		st.button('1h', key='tw_1h', on_click=set_hours, args=(1,), use_container_width=True)
-	with c2:
-		st.markdown(f'<span class="tw-marker {"selected" if hours == 6 else ""}"></span>', unsafe_allow_html=True)
-		st.button('6h', key='tw_6h', on_click=set_hours, args=(6,), use_container_width=True)
-	with c3:
-		st.markdown(f'<span class="tw-marker {"selected" if hours == 24 else ""}"></span>', unsafe_allow_html=True)
-		st.button('24h', key='tw_24h', on_click=set_hours, args=(24,), use_container_width=True)
-	with c4:
-		st.markdown(f'<span class="tw-marker {"selected" if hours == 168 else ""}"></span>', unsafe_allow_html=True)
-		st.button('7d', key='tw_7d', on_click=set_hours, args=(168,), use_container_width=True)
-	st.markdown('</div>', unsafe_allow_html=True)
-	
-	# Action buttons - Refresh Data and Download CSV (centered)
-	_, a1, a2, _ = st.columns([1, 0.5, 0.5, 1])
-	with a1:
-		if st.button('Refresh Data', use_container_width=True):
-			st.session_state['last_refresh'] = datetime.now().timestamp()
-	with a2:
-		csv = df.to_csv(index=False)
-		b = io.BytesIO()
-		b.write(csv.encode())
-		b.seek(0)
-		st.download_button('Download CSV', b, file_name='vitals.csv', mime='text/csv', use_container_width=True)
+	_, c1, c2, c3, c4, _ = st.columns([1.5, 1, 1, 1, 1, 1.5])
+	button_columns = [c1, c2, c3, c4]
+
+	for col, (label, value) in zip(button_columns, time_options):
+		with col:
+			is_selected = (value == hours)
+			st.button(
+				label,
+				key=f'tw_{label}',
+				on_click=set_hours,
+				args=(value,),
+				type='primary' if is_selected else 'secondary',
+				width='stretch'
+			)
+
+	# --- Action Buttons (Refresh & Download) ---
+	actions_container = st.container()
+	with actions_container:
+		_, a1, a2, _ = st.columns([1.5, 1, 1, 1.5])
+		with a1:
+			if st.button('Refresh Data', width='stretch', key='refresh_data'):
+				st.session_state['full_data'] = simulator.simulate_vitals(168)
+				st.rerun()
+		with a2:
+			csv = df.to_csv(index=False)
+			b = io.BytesIO()
+			b.write(csv.encode())
+			b.seek(0)
+			st.download_button('Download CSV', b, file_name='vitals.csv', mime='text/csv', width='stretch')
 
 
 def main():
