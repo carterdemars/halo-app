@@ -8,7 +8,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app
-COPY ingestion.py .
+COPY app.py .
 
 # Start Gunicorn server (Flask app)
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 ingestion:app
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 app:app
